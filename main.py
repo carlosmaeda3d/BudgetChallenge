@@ -46,9 +46,9 @@ class BudgetApp:
         ]
         week_list = [
             WeekData("July", 1, 1, "Income", "Paycheck", 2000),
-            WeekData("July", 1, 1, "Income", "Paycheck2", 2000),
-            WeekData("July", 1, 2, "Expense", "Fun Time", 1000),
-            WeekData("July", 2, 1, "Income", "Paycheck", 2000),
+            WeekData("July", 1, 2, "Income", "Paycheck2", 2000),
+            WeekData("July", 1, 3, "Expense", "Fun Time", 2000),
+            WeekData("July", 2, 1, "Income", "Paycheck", 3000),
             WeekData("July", 2, 2, "Expense", "Fun Time", 1000),
             WeekData("August", 1, 1, "Income", "Paycheck", 2000),
             WeekData("August", 1, 2, "Expense", "Fun Time", 1000)
@@ -66,27 +66,29 @@ class BudgetApp:
 
         def month_list_creator():
             weeks = 0
+
             for m in week_list:
                 if m.wk_month == month_text.get():
                     if m.wk_num > weeks:
-                        new_item = MonthData("July", "Week " + str(weeks + 1), "Range", "0", "0", "0")
-                        month_list.append(new_item)
                         weeks += 1
+
+            for i in range(weeks):
+                total_income = 0
+                total_expense = 0
+                grant_total = total_income - total_expense
+
+                for m in week_list:
+                    if m.wk_month == month_text.get():
+                        if m.wk_num == i + 1:
+                            if m.wk_item_type == "Income":
+                                total_income += m.wk_item_amount
+                            elif m.wk_item_type == "Expense":
+                                total_expense += m.wk_item_amount
+
+                new_item = MonthData(month_text.get(), "Week " + str(i + 1), "Range", str(total_income),
+                                     str(total_expense), str(grant_total))
+                month_list.append(new_item)
             print(month_list)
-
-            # weeeks = 0
-            # for m in week_list:
-            #     if m.wk_month == month_text.get():
-            #         if m.wk_num > weeeks:
-            #             income = 0
-            #             expense = 0
-            #             if m.wk_item_type == "Income":
-            #                 income += m.wk_item_amount
-            #             elif m.wk_item_type == "Expense":
-            #                 expense += m.wk_item_amount
-            #             total = income - expense
-            #             print("Week " + str(m.wk_num) + "Income: " + str(income) + ", Expense: " + str(expense) + ", Total" + str(total))
-
 
         def month_frame():
             frame1 = Frame(root, width=800, height=300, bg=bg_green)
