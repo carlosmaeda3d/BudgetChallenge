@@ -1,19 +1,20 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
+from datetime import datetime, timedelta
 import tkinter as tk
 
 class MonthData:
-    def __init__(self, wk_month, wk_num, wk_range, wk_income, wk_expenses, wk_total):
+    def __init__(self, wk_month, wk_num, wk_start_date, wk_income, wk_expenses, wk_total):
         self.wk_month = wk_month
         self.wk_num = wk_num
-        self.wk_range = wk_range
+        self.wk_start_date = wk_start_date
         self.wk_income = wk_income
         self.wk_expenses = wk_expenses
         self.wk_total = wk_total
 
     def __repr__(self):
-        return self.wk_month + "," + self.wk_num + "," + self.wk_range + "," + self.wk_income + "," \
+        return self.wk_month + "," + self.wk_num + "," + self.wk_start_date + "," + self.wk_income + "," \
                + self.wk_expenses + "," + self.wk_total
 
 class WeekData:
@@ -27,6 +28,15 @@ class WeekData:
     def __repr__(self):
         return self.wk_month + ", " + str(self.wk_num) + ", " + self.wk_item_type + ", " + self.wk_item_name + ", " + \
                str(self.wk_item_amount) + "\n"
+
+class MonthWeeksData:
+    def __init__(self, mw_month, mw_start_date, mw_total_weeks):
+        self.mw_month = mw_month
+        self.mw_start_date = mw_start_date
+        self.mw_total_weeks = mw_total_weeks
+
+    def __repr__(self):
+        return self.mw_month + ", " + self.mw_start_date + ", " + str(self.mw_total_weeks) + "\n"
 
 class BudgetApp:
 
@@ -43,14 +53,18 @@ class BudgetApp:
         month_text = StringVar()
         current_month = IntVar()
         month_list = []
+        month_weeks_list = [
+            MonthWeeksData(months[6], datetime(2022, 7, 4), 4),
+            MonthWeeksData(months[7], datetime(2022, 8, 1), 5)
+        ]
         week_list = [
-            WeekData("July", 1, "Income", "Paycheck", 5000),
-            WeekData("July", 1, "Income", "Paycheck2", 4000),
-            WeekData("July", 1, "Expense", "Fun Time", 8000),
-            WeekData("July", 2, "Income", "Paycheck", 6000),
-            WeekData("July", 2, "Expense", "Fun Time", 1000),
-            WeekData("August", 1, "Income", "Paycheck", 2000),
-            WeekData("August", 1, "Expense", "Fun Time", 1000)
+            WeekData(months[6], 1, "Income", "Paycheck", 5000),
+            WeekData(months[6], 1, "Income", "Paycheck2", 4000),
+            WeekData(months[6], 1, "Expense", "Fun Time", 8000),
+            WeekData(months[6], 2, "Income", "Paycheck", 6000),
+            WeekData(months[6], 2, "Expense", "Fun Time", 1000),
+            WeekData(months[7], 1, "Income", "Paycheck", 2000),
+            WeekData(months[7], 1, "Expense", "Fun Time", 1000)
         ]
         main_selected_week = StringVar()
         # Setting start month
@@ -64,17 +78,30 @@ class BudgetApp:
             frame.destroy()
 
         def month_list_creator():
+            # Adds week amounts and start date
             weeks = 0
+            start_date = datetime
 
-            for m in week_list:
-                if m.wk_month == month_text.get():
-                    if m.wk_num > weeks:
-                        weeks += 1
+            for m in month_weeks_list:
+                if m.mw_month == month_text.get():
+                    weeks = m.mw_total_weeks
+                    start_date = m.mw_start_date
 
+            # Figures out income and expenses from week list and makes month list from it
             for i in range(weeks):
                 total_income = 0
                 total_expense = 0
 
+                # Gets start date for each week in range
+                if i == 0:
+                    new_date = start_date.strftime("%m/%d/%y")
+                else:
+                    added = i * 7
+                    old_date = start_date
+                    new = old_date + timedelta(days=added)
+                    new_date = new.strftime("%m/%d/%y")
+
+                # Gets income and expense data from week list
                 for m in week_list:
                     if m.wk_month == month_text.get():
                         if m.wk_num == i + 1:
@@ -85,7 +112,8 @@ class BudgetApp:
 
                 grant_total = total_income - total_expense
 
-                new_item = MonthData(month_text.get(), "Week " + str(i + 1), "Range", str(total_income),
+                # Creates items for month list and adds them
+                new_item = MonthData(month_text.get(), "Week " + str(i + 1), new_date, str(total_income),
                                      str(total_expense), str(grant_total))
                 month_list.append(new_item)
             # print(month_list)
@@ -128,7 +156,7 @@ class BudgetApp:
                 for i in month_list:
                     if i.wk_month == month_text.get():
                         self.month_tree.insert("", "end",
-                                               values=(i.wk_num, i.wk_range, i.wk_income, i.wk_expenses, i.wk_total))
+                                               values=(i.wk_num, i.wk_start_date, i.wk_income, i.wk_expenses, i.wk_total))
 
             def next_month():
                 month = current_month.get()
@@ -152,7 +180,7 @@ class BudgetApp:
                 month_tree_delete()
                 for i in month_list:
                     if i.wk_month == month_text.get():
-                        self.month_tree.insert("", "end", values=(i.wk_num, i.wk_range, i.wk_income, i.wk_expenses,
+                        self.month_tree.insert("", "end", values=(i.wk_num, i.wk_start_date, i.wk_income, i.wk_expenses,
                                                                   i.wk_total))
 
             def edit_month():
@@ -201,13 +229,13 @@ class BudgetApp:
             week_info_button.place(x=400, y=240)
 
             # TREEVIEW::::: Define Columns
-            tree_columns = ("wk_num", "wk_range", "wk_income", "wk_expenses", "wk_total")
+            tree_columns = ("wk_num", "wk_start_date", "wk_income", "wk_expenses", "wk_total")
 
             self.month_tree = ttk.Treeview(frame1, columns=tree_columns, show="headings", height=5)
 
             # Define Headings
             self.month_tree.heading("wk_num", text="Week #")
-            self.month_tree.heading("wk_range", text="Range")
+            self.month_tree.heading("wk_start_date", text="Start Date")
             self.month_tree.heading("wk_income", text="Income")
             self.month_tree.heading("wk_expenses", text="Expenses")
             self.month_tree.heading("wk_total", text="Totals")
@@ -219,7 +247,7 @@ class BudgetApp:
             # Inserts Data
             for i in month_list:
                 if i.wk_month == month_text.get():
-                    self.month_tree.insert("", "end", values=(i.wk_num, i.wk_range, i.wk_income, i.wk_expenses,
+                    self.month_tree.insert("", "end", values=(i.wk_num, i.wk_start_date, i.wk_income, i.wk_expenses,
                                                               i.wk_total))
 
             # Creates grid
@@ -485,7 +513,7 @@ class BudgetApp:
 
 
         def edit_month_frame():
-            frame3 = Frame(root, width=300, height=175, bg=bg_green)
+            frame3 = Frame(root, width=400, height=200, bg=bg_green)
             frame3.grid(row=0, column=0)
             frame3.pack_propagate(False)
             frame3.grid_propagate(False)
@@ -512,17 +540,17 @@ class BudgetApp:
 
             start_label = tk.Label(frame3, text="Start Date", font=("TkHeadingFont", 13, "bold", "underline"),
                                       fg=dark_green, bg=bg_green)
-            start_input = tk.Entry(frame3, width=10, textvariable=date_input)
-            start_label.place(x=20, y=50)
-            start_input.place(x=30, y=80)
+            start_input = tk.Entry(frame3, width=15, justify="center", textvariable=date_input)
+            start_label.place(x=40, y=50)
+            start_input.place(x=35, y=80)
 
             # How many weeks drop down
             many_weeks_label = tk.Label(frame3, text="How many weeks?", font=("TkHeadingFont", 13, "bold", "underline"),
                                 fg=dark_green, bg=bg_green)
-            week_sel_combo = ttk.Combobox(frame3, width=3, state="readonly")
+            week_sel_combo = ttk.Combobox(frame3, width=5, state="readonly")
             week_sel_combo["values"] = [1, 2, 3, 4, 5]
-            many_weeks_label.place(x=130, y=50)
-            week_sel_combo.place(x=180, y=80)
+            many_weeks_label.place(x=210, y=50)
+            week_sel_combo.place(x=260, y=80)
 
             # Buttons
             back_button = tk.Button(frame3, text="Month Sheet", font=("TkHeadingFont", 11), bg=dark_green,
@@ -530,12 +558,12 @@ class BudgetApp:
 
             save_button = tk.Button(frame3, text="Save", font=("TkHeadingFont", 11), bg=dark_green,
                                     fg="white", width=13, cursor="hand2", command=save_month)
-            back_button.place(x=20, y=105)
-            save_button.place(x=150, y=105)
+            save_button.place(x=130, y=115)
+            back_button.place(x=130, y=160)
 
-        # month_frame()
+        month_frame()
         # week_frame()
-        edit_month_frame()
+        # edit_month_frame()
 
 # Initualize app
 root = Tk()
