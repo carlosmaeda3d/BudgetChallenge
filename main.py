@@ -36,7 +36,7 @@ class MonthWeeksData:
         self.mw_total_weeks = mw_total_weeks
 
     def __repr__(self):
-        return self.mw_month + ", " + self.mw_start_date + ", " + str(self.mw_total_weeks) + "\n"
+        return self.mw_month + ", " + str(self.mw_start_date) + ", " + str(self.mw_total_weeks) + "\n"
 
 class BudgetApp:
 
@@ -55,7 +55,8 @@ class BudgetApp:
         month_list = []
         month_weeks_list = [
             MonthWeeksData(months[6], datetime(2022, 7, 4), 4),
-            MonthWeeksData(months[7], datetime(2022, 8, 1), 5)
+            MonthWeeksData(months[7], datetime(2022, 8, 1), 5),
+            MonthWeeksData(months[0], datetime(2022, 1, 1), 5)
         ]
         week_list = [
             WeekData(months[6], 1, "Income", "Paycheck", 5000),
@@ -187,11 +188,6 @@ class BudgetApp:
                 frame_delete(frame1)
                 edit_month_frame()
 
-            def delete_week():
-                print("Delete Last Week")
-                # month_length = len(self.month_tree.co)
-                # print(month_length)
-
             def week_info():
                 week_selected = self.month_tree.focus()
                 week_value = self.month_tree.item(week_selected, 'values')
@@ -216,17 +212,13 @@ class BudgetApp:
                                          fg="white", width=13, cursor="hand2", command=next_month)
             edit_month_button = tk.Button(frame1, text="Edit Month", font=("TkHeadingFont", 11), bg=dark_green,
                                           fg="white", cursor="hand2", width=10, height=4, command=edit_month)
-            new_week_button = tk.Button(frame1, text="Delete Last Week", font=("TkHeadingFont", 11), bg=dark_green,
-                                        fg="white", cursor="hand2", width=10, height=2, command=delete_week,
-                                        wraplength=75)
             week_info_button = tk.Button(frame1, text="Week Info", font=("TkHeadingFont", 11), bg=dark_green,
-                                         fg="white", cursor="hand2", width=10, height=2, command=week_info)
+                                         fg="white", cursor="hand2", width=20, height=2, command=week_info)
 
             prev_month_button.place(x=10, y=20)
             new_month_button.place(x=665, y=20)
             edit_month_button.place(x=650, y=120)
-            new_week_button.place(x=300, y=240)
-            week_info_button.place(x=400, y=240)
+            week_info_button.place(x=300, y=240)
 
             # TREEVIEW::::: Define Columns
             tree_columns = ("wk_num", "wk_start_date", "wk_income", "wk_expenses", "wk_total")
@@ -519,7 +511,43 @@ class BudgetApp:
             frame3.grid_propagate(False)
 
             def save_month():
-                print("Save")
+                # Check to see if date is in correct format
+                try:
+                    datetime.strptime(date_input.get(), "%m/%d/%y")
+                except:
+                    messagebox.showinfo("Error", "Needs to be in correct date format. MM/DD/YY")
+                    return
+
+                if week_sel_combo.get() == "":
+                    messagebox.showinfo("Error", "Need to select how many weeks")
+                    return
+
+                # First checks if month data is already there, if so it updated the data, else it adds inputs
+                #   to month_weeks list
+                on_list = 0
+                new_item = MonthWeeksData(month_text.get(), datetime.strptime(date_input.get(), "%m/%d/%y"),
+                                          int(week_sel_combo.get()))
+
+                for idx, i in enumerate(month_weeks_list):
+                    if i.mw_month == month_text.get():
+                        on_list += 1
+                        # Update month-week list
+                        month_weeks_list[idx] = new_item
+
+                if on_list == 0:
+                    # Add new item to month-week list
+                    month_weeks_list.append(new_item)
+
+                # Removes any data from week_list if changes made to week amounts
+                for w in list(week_list):
+                    if w.wk_month == month_text.get() and w.wk_num > int(week_sel_combo.get()):
+                        week_list.remove(w)
+
+                # Goes back to month sheet
+                frame_delete(frame3)
+                month_list.clear()
+                month_list_creator()
+                month_frame()
 
             def back_month():
                 frame_delete(frame3)
@@ -560,6 +588,13 @@ class BudgetApp:
                                     fg="white", width=13, cursor="hand2", command=save_month)
             save_button.place(x=130, y=115)
             back_button.place(x=130, y=160)
+
+            # Making sure if month is already made, it puts current weeks and date in there
+            for c in month_weeks_list:
+                if c.mw_month == month_text.get():
+                    date = datetime.strftime(c.mw_start_date, "%m/%d/%y")
+                    week_sel_combo.set(c.mw_total_weeks)
+                    date_input.set(date)
 
         month_frame()
         # week_frame()
