@@ -46,31 +46,33 @@ class BudgetApp:
         root.eval("tk::PlaceWindow . center")
 
         #Main variables
+        intro_text = "HOW TO USE: \n- Start by clicking edit month and input start date and add how many weeks are in " \
+                     "the month. \n- Click the week you want to work on, then click edit week to start adding income " \
+                     "and expense amounts.\n- To delete weeks, click edit month and change to the amount of weeks " \
+                     "you want.\n- To delete income and expense amounts, click the week you want to edit, then " \
+                     "click edit week. From there delete the individual amounts."
         bg_green = "#86DB6B"
         dark_green = "#4D5C49"
         months = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
                   "October", "November", "December")
         month_text = StringVar()
         current_month = IntVar()
+        tut_play = IntVar()
         month_list = []
-        month_weeks_list = [
-            MonthWeeksData(months[6], datetime(2022, 7, 4), 4),
-            MonthWeeksData(months[7], datetime(2022, 8, 1), 5),
-            MonthWeeksData(months[0], datetime(2022, 1, 1), 5)
-        ]
-        week_list = [
-            WeekData(months[6], 1, "Income", "Paycheck", 5000),
-            WeekData(months[6], 1, "Income", "Paycheck2", 4000),
-            WeekData(months[6], 1, "Expense", "Fun Time", 8000),
-            WeekData(months[6], 2, "Income", "Paycheck", 6000),
-            WeekData(months[6], 2, "Expense", "Fun Time", 1000),
-            WeekData(months[7], 1, "Income", "Paycheck", 2000),
-            WeekData(months[7], 1, "Expense", "Fun Time", 1000)
-        ]
+        month_weeks_list = []
+        week_list = []
         main_selected_week = StringVar()
         # Setting start month
         current_month.set(6)
         month_text.set("July")
+        tut_play.set(0)
+
+        def tut_screen():
+            if tut_play.get() == 0:
+                messagebox.showinfo("How To Use App", intro_text)
+                tut_play.set(1)
+            else:
+                return
 
         def frame_delete(frame):
             # Destroys all widgets, then destroys frame
@@ -244,6 +246,9 @@ class BudgetApp:
 
             # Creates grid
             self.month_tree.grid(row=0, column=0, sticky="n e s w", pady=100, padx=200)
+
+            #Tutorial part
+            tut_screen()
 
         def week_frame():
             frame2 = Frame(root, width=800, height=300, bg=bg_green)
